@@ -1,21 +1,21 @@
 import 'dart:io';
 
-import 'package:contactsbuddy/models/contactModel.dart';
+import 'package:contactsbuddy_master/models/contactModel.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
 class DatabaseHelper {
-  String _dbName = "Contact.db";
-  int _dbVersion = 1;
+  final String _dbName = "Contact.db";
+  final int _dbVersion = 1;
 
-  DatabaseHelper.private();
+  DatabaseHelper._privateConstructor();
 
-  static final DatabaseHelper instance = DatabaseHelper.private();
+  static final DatabaseHelper instance = DatabaseHelper._privateConstructor();
 
-  Database _db;
+  static Database? _db;
 
-  Future<Database> get db async {
+  Future<Database?> get db async {
     if (_db != null) {
       return _db;
     }
@@ -23,56 +23,121 @@ class DatabaseHelper {
     return _db;
   }
 
-  _initDB() async {
+  Future<Database> _initDB() async {
     Directory dir = await getApplicationDocumentsDirectory();
-    String dbPath = join(dir.toString(), _dbName);
-    return await openDatabase(dbPath,
-        version: _dbVersion, onCreate: _onCreateDb);
+    String dbPath = join(dir.path, _dbName);
+    return await openDatabase(
+      dbPath,
+      version: _dbVersion,
+      onCreate: _onCreateDb,
+    );
   }
-//Creating table
-  _onCreateDb(Database db, int version) async {
+
+  // temp
+  // void alter() async {
+  //   Database? db = await this.db;
+  //   String sql =
+  //       "ALTER TABLE ${Contact.tblName} ADD ${Contact.colIsDone} BOOLEAN";
+  //   db?.execute(sql);
+  // }
+
+  // Creating table
+  // Future<void> _onCreateDb(Database db, int version) async {
+  //   await db.execute('''
+  //   CREATE TABLE ${Contact.tblName}(
+  //   ${Contact.colId} INTEGER PRIMARY KEY AUTOINCREMENT,
+  //   ${Contact.colTitle} TEXT,
+  //   ${Contact.colDate} TEXT,
+  //   ${Contact.colPriority} TEXT,
+  //   )
+  //   ''');
+  // }
+  Future<void> _onCreateDb(Database db, int version) async {
     await db.execute('''
     CREATE TABLE ${Contact.tblName}(
     ${Contact.colId} INTEGER PRIMARY KEY AUTOINCREMENT,
     ${Contact.colTitle} TEXT,
     ${Contact.colDate} TEXT,
-    ${Contact.colPriority} TEXT,
+    ${Contact.colPriority} TEXT
     )
     ''');
   }
 
-//Inserting tasks
-  Future<int> insertTask(Contact contact) async {
-    Database db = await this.db;
-    return await db.insert(Contact.tblName, contact.toMap());
+  // for checking is done
+  // Future<bool> isDone(Contact contact) async {
+  //   Database? db = await this.db;
+  //   return await db!.rawQuery(
+  //     "SELECT colIsDone FROM ${Contact.tblName} WHERE ${Contact.colId} LIKE ${}"
+  //   );
+  // }
+
+  // Inserting contacts
+  Future<int> insertContact(Contact contact) async {
+    Database? db = await this.db;
+    print("Date: ${contact.date}");
+    return await db!.insert(Contact.tblName, contact.toMap());
   }
 
-//Fetching the tasks
-  Future<List<Contact>> fetchTask(String contactname) async {
-    Database db = await this.db;
-    final List<Map> tasks = await db.rawQuery("SELECT * FROM Contact_table WHERE title LIKE '$contactname%'");
-    final List<Contact> tasksList =
-    contacts.length == 0 ? [] : contacts.map((e) => Contact.fromMap(e)).toList();
-    tasksList.sort((taskA, taskB) => taskA.date.compareTo(taskB.date));
-    return tasksList;
+  // Fetching the contacts
+  // Future<List<Contact>> fetchContacts(String contactName) async {
+  //   Database? db = await this.db;
+  //   final List<Map<String, dynamic>> contacts = await db!.rawQuery(
+  //       "SELECT * FROM ${Contact.tblName} WHERE ${Contact.colTitle} LIKE '$contactName%'");
+
+  //   final List<Contact> contactsList = contacts.isEmpty
+  //       ? []
+  //       : contacts.map((e) => Contact.fromMap(e)).toList();
+  //   contactsList
+  //       .sort((contactA, contactB) => contactA.date!.compareTo(contactB.date!));
+  //   return contactsList;
+  // }
+  Future<List<Contact>> fetchContacts(String contactName) async {
+    Database? db = await this.db;
+    final List<Map<String, dynamic>> contacts = await db!.rawQuery(
+        "SELECT * FROM ${Contact.tblName} WHERE ${Contact.colTitle} LIKE '%$contactName%'");
+
+    print("Contact List from Database: $contacts");
+
+    final List<Contact> contactsList = contacts.isEmpty
+        ? []
+        : contacts.map((e) => Contact.fromMap(e)).toList();
+
+    print("Contact List that returns: $contactsList");
+    // contactsList
+    //     .sort((contactA, contactB) => contactA.date!.compareTo(contactB.date!));
+
+    return contactsList;
   }
 
+  // Querying all contacts
   Future<List<Map<String, dynamic>>> queryAll() async {
-    Database db = await this.db;
-    final List<Map<String, dynamic>> result = await db.query(Task.tblName);
+    Database? db = await this.db;
+    final List<Map<String, dynamic>> result = await db!.query(Contact.tblName);
     return result;
   }
-//Updating the tasks
-  Future updateTask(Task task) async {
-    Database db = await this.db;
-    return await db.update(Task.tblName, task.toMap(),
-        where: '${Task.colId} = ?', whereArgs: [task.id]);
+
+  // Updating the contacts
+  Future<List<Map<String, Object?>>> updateContact(Contact contact,
+      String title, int id, String priority, String date) async {
+    Database? db = await this.db;
+    String sql =
+        "UPDATE ${Contact.tblName} SET ${Contact.colTitle}='$title', ${Contact.colDate}='$date', ${Contact.colPriority}='$priority' WHERE id=$id";
+
+    return await db!.rawQuery(sql);
   }
 
-//Deleting the tasks
-  Future<int> deleteTask(int id) async {
-    Database db = await this.db;
-    return await db
-        .delete(Task.tblName, where: '${Task.colId} = ?', whereArgs: [id]);
+  // // for checking that the task is done
+  // Future<void> markDone(Contact contact, int id) async {
+  //   Database? db = await this.db;
+  //   String sql =
+  //       "UPDATE ${Contact.tblName} SET ${Contact.colIsDone} = 1 - ${Contact.colIsDone} WHERE ${Contact.colId} = $id";
+  //   await db!.rawUpdate(sql);
+  // }
+
+  // Deleting the contacts
+  Future<int> deleteContact(int id) async {
+    Database? db = await this.db;
+    return await db!.delete(Contact.tblName,
+        where: '${Contact.colId} = ?', whereArgs: [id]);
   }
 }

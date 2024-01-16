@@ -1,6 +1,6 @@
 {
-    "name": "contactsbuddy",
-    "short_name": "contactsbuddy",
+    "name": "contactsbuddy_master",
+    "short_name": "contactsbuddy_master",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

@@ -1,12 +1,22 @@
 class Contact {
-  int id;
-  String title;
-  DateTime date;
-  String priority;
+  int? id;
+  String? title;
+  String? date;
+  String? priority;
+  int? status = 0;
 
-
-  Contact({this.title, this.date, this.priority, });
-  Contact.withId({this.id, this.title, this.date, this.priority, });
+  Contact({
+    this.title,
+    this.date,
+    this.priority,
+    int? id,
+  });
+  Contact.withId({
+    this.id,
+    this.title,
+    this.date,
+    this.priority,
+  });
 
   static const tblName = "task_table";
   static const colId = "id";
@@ -14,13 +24,11 @@ class Contact {
   static const colDate = "date";
   static const colPriority = "priority";
 
-
   Map<String, dynamic> toMap() {
     var map = <String, dynamic>{
       colTitle: title,
       colPriority: priority,
-      colDate: date.toIso8601String(),
-
+      colDate: date,
     };
     if (id != null) {
       map[colId] = id;
@@ -29,12 +37,12 @@ class Contact {
   }
 
   factory Contact.fromMap(Map<String, dynamic> map) {
+    print("mapping contact ${map[colId]}");
     return Contact.withId(
-        id: map[colId],
-        title: map[colTitle],
-        date: DateTime.parse(map[colDate]),
-        priority: map[colPriority],
-
+      id: map[colId],
+      title: map[colTitle],
+      date: map[colDate].toString(),
+      priority: map[colPriority],
     );
   }
 }

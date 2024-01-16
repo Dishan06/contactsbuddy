@@ -1,3 +1,4 @@
+import 'package:contactsbuddy/screen/addContact.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/contactModel.dart';
@@ -15,22 +16,24 @@ class _MyContactsState extends State<MyContacts> {
 
   String contactListSearch="";
 
-  void _refreshTaskList() async {
+  get completedContact => null;
+
+  void _refreshContactList() async {
     setState(() {
-      _contactList = _dbHelper.fetchTask(contactListSearch);
+      _contactList = _dbHelper.fetchContact(contactListSearch);
     });
   }
 
   @override
   void initState() {
     _dbHelper = DatabaseHelper.instance;
-    _refreshTaskList();
+    _refreshContactList();
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    _refreshTaskList();
+    _refreshContactList();
     return Scaffold(
 
         floatingActionButton: FloatingActionButton(
@@ -39,8 +42,8 @@ class _MyContactsState extends State<MyContacts> {
             Navigator.push(
                 context,
                 MaterialPageRoute(
-                    builder: (_) => AddContact(
-                      refreshList: _refreshTaskList,
+                    builder: (_) => AddContacts(
+                      refreshList: _refreshContactList,
                     )
                 )
             );
@@ -56,10 +59,10 @@ class _MyContactsState extends State<MyContacts> {
               );
             }
 
-            final int completedTask = snapshot.data
-                .where((Contact task) => task?.status == 1)
+            final int completedContact = snapshot.data
+                .where((Contact contact) => contact?.status == 1)
                 .toList()
-                .length;
+               .length;
 
             return ListView.builder(
                 padding: EdgeInsets.symmetric(
@@ -74,14 +77,14 @@ class _MyContactsState extends State<MyContacts> {
                       children: [
 
                         Text(
-                          "My Tasks",
+                          "My Contacts",
                           style: TextStyle(
                               fontSize: 30,
                               color: Theme.of(context).primaryColor,
                               fontWeight: FontWeight.bold),
                         ),
                         Text(
-                          "Completed $completedTask of ${snapshot.data.length}",
+                          "Completed $completedContact of ${snapshot.data.length}",
                           style: TextStyle(
                               fontSize: 15,
                               color: Theme.of(context).primaryColor,
@@ -96,7 +99,7 @@ class _MyContactsState extends State<MyContacts> {
                           textCapitalization: TextCapitalization.sentences,
                           onChanged: (value) {
                             setState(() {
-                              todoListSearch = value;
+                              contactListSearch = value;
                             });
                           },
                           decoration: InputDecoration(
@@ -118,19 +121,19 @@ class _MyContactsState extends State<MyContacts> {
 
                     );
                   }
-                  return _buildTask(snapshot.data[index - 1]);
+                  return _buildContact(snapshot.data[index - 1]);
                 });
           },
         ) // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 
-  Widget _buildTask(Task task) {
+  Widget _buildContact(Contact contact) {
 
     String date="";
 
-    if(task?.date!=null){
-      date=_dateFormat.format(task.date);
+    if(contact?.date!=null){
+      date=_dateFormat.format(contact.date);
     }
 
 
@@ -147,7 +150,7 @@ class _MyContactsState extends State<MyContacts> {
 
               padding: EdgeInsets.symmetric(vertical: 20.0,horizontal: 10.0),
               decoration: BoxDecoration(
-                gradient: task?.status==0? LinearGradient(begin: Alignment.topLeft,end: Alignment.bottomRight,colors: const [Color(0XFF70A9FF), Color(0XFF90BCFF),]):LinearGradient(begin: Alignment.topLeft,end: Alignment.bottomRight,colors: const [Color(0XFFFFC026 ), Color(0XFFFFA21D ),]),
+                gradient: contact?.status==0? LinearGradient(begin: Alignment.topLeft,end: Alignment.bottomRight,colors: const [Color(0XFF70A9FF), Color(0XFF90BCFF),]):LinearGradient(begin: Alignment.topLeft,end: Alignment.bottomRight,colors: const [Color(0XFFFFC026 ), Color(0XFFFFA21D ),]),
                 borderRadius: BorderRadius.circular(20.0),
                 boxShadow: [
                   BoxShadow(
@@ -160,7 +163,7 @@ class _MyContactsState extends State<MyContacts> {
                 title: Padding(
                   padding: EdgeInsets.only(bottom: 5.0),
                   child: Text(
-                    task?.title!=null ? task.title : "Task" ,
+                    contact?.title!=null ? contact.title : "Contact" ,
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.w600,
@@ -169,34 +172,34 @@ class _MyContactsState extends State<MyContacts> {
                   ),
                 ),
                 subtitle:
-                Text("${date} . ${task?.priority}",
+                Text("${date} . ${contact?.priority}",
                     style: TextStyle(
                       fontSize: 15,
                     )),
                 trailing: Checkbox(
                   onChanged: (val) {
 
-                    task?.status = val ? 1 : 0;
+                    contact?.status = val ? 1 : 0;
 
-                    _dbHelper.updateTask(task);
-                    _refreshTaskList();
+                    _dbHelper.updateContact(contact);
+                    _refreshContactList();
                   },
-                  value: task?.status == 1 ? true : false,
+                  value: contact?.status == 1 ? true : false,
                   activeColor: Color(0XFF52001B),
                 ),
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => AddTask(
-                      task: task,
-                      refreshList: _refreshTaskList,
+                    builder: (_) => AddContacts(
+                      contact: contact,
+                      refreshList: _refreshContactList,
                     ),
                   ),
                 ),
 
-                leading:task?.status==0? Icon(Icons.event, color: task?.priority == "High" ?
-                Colors.red : task?.priority=="Medium"? Color(0XFF0776CA):
-                Color(0XFF0AA51A),):Icon(Icons.check, color: task?.priority == "High" ?
+                leading:contact?.status==0? Icon(Icons.group, color: contact?.priority == "Friends" ?
+                Colors.red : contact?.priority=="Family"? Color(0XFF0776CA):
+                Color(0XFF0AA51A),):Icon(Icons.check, color: contact?.priority == "Friends" ?
                 Colors.red : Color(0XFF0E1D35),),
                 contentPadding: EdgeInsets.symmetric(horizontal: 5),
               ),
